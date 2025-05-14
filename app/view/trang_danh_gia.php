@@ -1,9 +1,17 @@
 <?php
+
 include '../../config/db.php';
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
+// Hàm icon chức vụ
+function chucVuIcon($ten_chuc_vu) {
+    if (stripos($ten_chuc_vu, 'trưởng phòng') !== false) return '🧑‍💼';
+    if (stripos($ten_chuc_vu, 'giám đốc') !== false) return '👔';
+    if (stripos($ten_chuc_vu, 'nhân viên') !== false) return '👨‍💻';
+    return '👤';
+}
 
 // Kiểm tra đăng nhập
 if (!isset($_SESSION['user']['ma_nhan_vien'])) {
@@ -19,8 +27,6 @@ $dot_stmt->execute();
 $dot_info = $dot_stmt->fetch(PDO::FETCH_ASSOC);
 $ma_dot = $dot_info['ma_dot'] ?? 'Không có';
 $ten_dot = $dot_info['ten_dot'] ?? 'Không xác định';
-
-
 
 // Nếu được gọi bởi AJAX để lấy dữ liệu đánh giá cũ
 if (
@@ -88,13 +94,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ':nhan_xet' => $nhan_xet
     ]);
 
-    header('Location: trang_danh_gia.php');
+    header('Location: admin_danh_gia.php?success=1');
     exit();
 }
 
 // Truy vấn danh sách nhân viên trừ bản thân
-
-
 $sql = "
     SELECT nv.ma_nhan_vien, nv.ho_ten, cv.ten_chuc_vu, pb.ten_phong_ban,
            (SELECT COUNT(*) 
@@ -113,13 +117,6 @@ $stmt->bindParam(':ma_dot', $ma_dot);
 $stmt->execute();
 $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Danh sách đã đánh giá
-$sql_danh_gia = "SELECT nguoi_duoc_danh_gia FROM danh_gia WHERE nguoi_danh_gia = :user_id";
-$stmt = $conn->prepare($sql_danh_gia);
-$stmt->bindParam(':user_id', $user_id);
-$stmt->execute();
-$da_danh_gia_ids = $stmt->fetchAll(PDO::FETCH_COLUMN);
-
 $da_danh_gia = [];
 $chua_danh_gia = [];
 
@@ -137,8 +134,11 @@ foreach ($result as $nv) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đánh Giá</title>
+    <title>Quản lý Admin</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -146,7 +146,7 @@ foreach ($result as $nv) {
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            background-color: #f7faf9;
+            background-color: #f5f7fa;
         }
         .container {
             display: flex;
@@ -158,37 +158,40 @@ foreach ($result as $nv) {
         .main-content {
             flex: 1;
             background-color: #ffffff;
-            padding: 20px;
+            padding: 24px;
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
             align-items: center;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-            margin: 20px auto;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+            border-radius: 10px;
+            margin: 28px auto;
             max-width: 1200px;
         }
         .nhan-vien-container {
             display: flex;
-            gap: 30px;
+            gap: 40px;
             justify-content: space-between;
             width: 100%;
+            margin-top: 18px;
         }
         .cot {
             flex: 1;
         }
         .nhan-vien-box {
-            border: 1px solid #ccc;
-            border-radius: 10px;
-            padding: 15px;
-            background-color: #f1f1f1;
+            border: 1px solid #e3e8ee;
+            border-radius: 12px;
+            padding: 20px 18px;
+            background-color: #f8fafc;
             width: 100%;
-            max-width: 300px;
-            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s ease;
+            max-width: 340px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            margin-bottom: 22px;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
         .nhan-vien-box:hover {
-            transform: translateY(-5px);
+            transform: translateY(-6px) scale(1.02);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.12);
         }
         .nhan-vien-box h4 {
             margin: 0 0 10px;
@@ -199,31 +202,55 @@ foreach ($result as $nv) {
             margin: 5px 0;
             font-size: 14px;
         }
-        .nhan-vien-box button {
-            margin-top: 10px;
-            padding: 6px 12px;
-            background-color: #007bff;
-            color: white;
+        .btn-danh-gia {
+            background: #22c55e;
+            color: #fff;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
+            padding: 7px 18px;
+            font-size: 15px;
+            margin-top: 12px;
             cursor: pointer;
+            transition: background 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 6px rgba(34,197,94,0.08);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
-        .nhan-vien-box button:hover {
-            background-color: #0056b3;
+        .btn-danh-gia:hover {
+            background: #16a34a;
+        }
+        .btn-sua-danh-gia {
+            background: #f59e42;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 7px 18px;
+            font-size: 15px;
+            margin-top: 12px;
+            cursor: pointer;
+            transition: background 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 6px rgba(245,158,66,0.08);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-sua-danh-gia:hover {
+            background: #ea580c;
         }
         #formContainer {
             display: none;
-            margin-top: 20px;
-            border: 1px solid #ccc;
-            padding: 20px;
-            background-color: #f9f9f9;
-            max-width: 400px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-top: 28px;
+            border: 1px solid #e3e8ee;
+            padding: 24px 20px;
+            background-color: #f8fafc;
+            max-width: 420px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
         label {
             display: block;
-            margin: 10px 0;
+            margin: 12px 0 6px 0;
         }
         h2, h3 {
             color: #333;
@@ -231,13 +258,18 @@ foreach ($result as $nv) {
     </style>
 </head>
 <body>
-    
     <div class="container">
         <!-- Sidebar -->
         <?php include './sidebar.php'; ?>
 
         <!-- Main content -->
         <main class="main-content">
+               <?php if (isset($_GET['success'])): ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert" style="max-width:500px;margin:0 auto 16px;">
+            <i class="bi bi-check-circle-fill"></i> Gửi đánh giá thành công!
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+        </div>
+    <?php endif; ?>
             <p><strong>Đợt đánh giá hiện tại:</strong> <?= htmlspecialchars($ten_dot) ?> (Mã: <?= htmlspecialchars($ma_dot) ?>)</p>
 
             <h2>Danh sách nhân viên cần đánh giá</h2>
@@ -249,9 +281,15 @@ foreach ($result as $nv) {
                         <div class="nhan-vien-box">
                             <h4><?= htmlspecialchars($row['ho_ten']) ?></h4>
                             <p><strong>Mã NV:</strong> <?= htmlspecialchars($row['ma_nhan_vien']) ?></p>
-                            <p><strong>Chức vụ:</strong> <?= htmlspecialchars($row['ten_chuc_vu']) ?></p>
+                            <p>
+                                <strong>Chức vụ:</strong>
+                                <span style="font-size:18px"><?= chucVuIcon($row['ten_chuc_vu']) ?></span>
+                                <?= htmlspecialchars($row['ten_chuc_vu']) ?>
+                            </p>
                             <p><strong>Phòng ban:</strong> <?= htmlspecialchars($row['ten_phong_ban']) ?></p>
-                            <button onclick="hienForm(<?= $row['ma_nhan_vien'] ?>, '<?= htmlspecialchars($row['ho_ten'], ENT_QUOTES) ?>')">Đánh giá</button>
+                            <button class="btn-danh-gia" onclick="hienForm(<?= $row['ma_nhan_vien'] ?>, '<?= htmlspecialchars($row['ho_ten'], ENT_QUOTES) ?>')">
+                                <i class="bi bi-pencil-square"></i> Đánh giá
+                            </button>
                         </div>
                     <?php endforeach; ?>
                 </div>
@@ -262,79 +300,109 @@ foreach ($result as $nv) {
                         <div class="nhan-vien-box">
                             <h4><?= htmlspecialchars($row['ho_ten']) ?></h4>
                             <p><strong>Mã NV:</strong> <?= htmlspecialchars($row['ma_nhan_vien']) ?></p>
-                            <p><strong>Chức vụ:</strong> <?= htmlspecialchars($row['ten_chuc_vu']) ?></p>
+                            <p>
+                                <strong>Chức vụ:</strong>
+                                <span style="font-size:18px"><?= chucVuIcon($row['ten_chuc_vu']) ?></span>
+                                <?= htmlspecialchars($row['ten_chuc_vu']) ?>
+                            </p>
                             <p><strong>Phòng ban:</strong> <?= htmlspecialchars($row['ten_phong_ban']) ?></p>
-                            <button onclick="hienForm(<?= $row['ma_nhan_vien'] ?>, '<?= htmlspecialchars($row['ho_ten'], ENT_QUOTES) ?>', true)">Sửa đánh giá</button>
+                            <button class="btn-sua-danh-gia" onclick="hienForm(<?= $row['ma_nhan_vien'] ?>, '<?= htmlspecialchars($row['ho_ten'], ENT_QUOTES) ?>', true)">
+                                <i class="bi bi-pencil"></i> Sửa đánh giá
+                            </button>
                         </div>
                     <?php endforeach; ?>
                 </div>
             </div>
 
-            <div id="formContainer">
-                <h3>Đánh giá cho <span id="tenNhanVien"></span></h3>
-                <form method="post" action="">
-                    <input type="hidden" name="nguoi_danh_gia" value="<?= $user_id ?>">
-                    <input type="hidden" id="nguoiDuocDanhGia" name="nguoi_duoc_danh_gia">
+            <div class="modal fade" id="formDanhGiaModal" tabindex="-1" aria-labelledby="formDanhGiaLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content" style="border-radius: 12px;">
+      <div class="modal-header">
+        <h5 class="modal-title" id="formDanhGiaLabel">Đánh giá cho <span id="tenNhanVien"></span></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+      </div>
+      <form method="post" action="">
+        <div class="modal-body">
+          <input type="hidden" name="nguoi_danh_gia" value="<?= $user_id ?>">
+          <input type="hidden" id="nguoiDuocDanhGia" name="nguoi_duoc_danh_gia">
 
-                    <label>Điểm tuân thủ:
-                        <input type="number" name="diem_tuan_thu" min="1" max="10" step="0.5" required>
-                    </label>
-
-                    <label>Điểm hợp tác:
-                        <input type="number" name="diem_hop_tac" min="1" max="10" step="0.5" required>
-                    </label>
-
-                    <label>Điểm tận tuỵ:
-                        <input type="number" name="diem_tan_tuy" min="1" max="10" step="0.5" required>
-                    </label>
-
-                    <label>Nhận xét:
-                        <textarea name="nhan_xet" rows="3" cols="40"></textarea>
-                    </label>
-
-                    <button type="submit">Gửi đánh giá</button>
-                    <button type="button" onclick="anForm()">Huỷ</button>
-                </form>
-            </div>
+          <label class="mt-2">Điểm tuân thủ:
+            <input type="number" name="diem_tuan_thu" min="1" max="10" step="0.5" class="form-control" required>
+          </label>
+          <label class="mt-2">Điểm hợp tác:
+            <input type="number" name="diem_hop_tac" min="1" max="10" step="0.5" class="form-control" required>
+          </label>
+          <label class="mt-2">Điểm tận tuỵ:
+            <input type="number" name="diem_tan_tuy" min="1" max="10" step="0.5" class="form-control" required>
+          </label>
+          <label class="mt-2">Nhận xét:
+            <textarea name="nhan_xet" rows="3" class="form-control"></textarea>
+          </label>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary"><i class="bi bi-send"></i> Gửi đánh giá</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Huỷ</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
         </main>
     </div>
 
     <script>
-        function hienForm(maNV, tenNV, isEdit = false) {
-            document.getElementById('nguoiDuocDanhGia').value = maNV;
-            document.getElementById('tenNhanVien').textContent = tenNV;
-            document.getElementById('formContainer').style.display = 'block';
+function hienForm(maNV, tenNV, isEdit = false) {
+    // Hiện overlay loading
+    document.getElementById('loadingOverlay').style.display = 'flex';
 
-            // Reset trước
-            document.querySelector('[name="diem_tuan_thu"]').value = '';
-            document.querySelector('[name="diem_hop_tac"]').value = '';
-            document.querySelector('[name="diem_tan_tuy"]').value = '';
-            document.querySelector('[name="nhan_xet"]').value = '';
+    document.getElementById('nguoiDuocDanhGia').value = maNV;
+    document.getElementById('tenNhanVien').textContent = tenNV;
 
-            if (isEdit) {
-                var xhr = new XMLHttpRequest();
-                xhr.open('GET', 'trang_danh_gia.php?edit_id=' + maNV, true);
-                xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-                xhr.onload = function () {
-                    if (xhr.status === 200) {
-                        var data = JSON.parse(xhr.responseText);
-                        document.querySelector('[name="diem_tuan_thu"]').value = data.diem_tuan_thu;
-                        document.querySelector('[name="diem_hop_tac"]').value = data.diem_hop_tac;
-                        document.querySelector('[name="diem_tan_tuy"]').value = data.diem_tan_tuy;
-                        document.querySelector('[name="nhan_xet"]').value = data.nhan_xet;
-                    }
-                };
-                xhr.send();
+    // Reset trước
+    document.querySelector('[name="diem_tuan_thu"]').value = '';
+    document.querySelector('[name="diem_hop_tac"]').value = '';
+    document.querySelector('[name="diem_tan_tuy"]').value = '';
+    document.querySelector('[name="nhan_xet"]').value = '';
+
+    function showModalAndHideLoading() {
+        var modal = new bootstrap.Modal(document.getElementById('formDanhGiaModal'));
+        modal.show();
+        document.getElementById('loadingOverlay').style.display = 'none';
+    }
+
+    if (isEdit) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', 'admin_danh_gia.php?edit_id=' + maNV, true);
+        xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+        xhr.onload = function () {
+            if (xhr.status === 200) {
+                var data = JSON.parse(xhr.responseText);
+                document.querySelector('[name="diem_tuan_thu"]').value = data.diem_tuan_thu;
+                document.querySelector('[name="diem_hop_tac"]').value = data.diem_hop_tac;
+                document.querySelector('[name="diem_tan_tuy"]').value = data.diem_tan_tuy;
+                document.querySelector('[name="nhan_xet"]').value = data.nhan_xet;
             }
+            showModalAndHideLoading();
+        };
+        xhr.onerror = showModalAndHideLoading;
+        xhr.send();
+    } else {
+        setTimeout(showModalAndHideLoading, 350);
+    }
+}
 
-            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-        }
-
-        function anForm() {
-            document.getElementById('formContainer').style.display = 'none';
-        }
-    </script>
+function anForm() {
+    document.getElementById('formContainer').style.display = 'none';
+}
+</script>
+    <!-- Loading overlay -->
+<div id="loadingOverlay" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:3000;background:rgba(0,0,0,0.2);align-items:center;justify-content:center;">
+    <div style="background:#fff;padding:24px 36px;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.15);display:flex;flex-direction:column;align-items:center;">
+        <div class="spinner-border text-primary" role="status" style="width:2.5rem;height:2.5rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <div style="margin-top:12px;font-size:16px;">Đang tải dữ liệu...</div>
+    </div>
+</div>
 </body>
 </html>
-
-

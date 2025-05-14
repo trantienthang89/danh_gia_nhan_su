@@ -1,12 +1,11 @@
-<!-- filepath: d:\xampp\htdocs\dacs3\admin\views\dua_top.php -->
 <?php
+
 include '../../config/db.php';
 
 // Lấy mã đợt từ URL
 $ma_dot = $_GET['ma_dot'] ?? null;
 
 if ($ma_dot) {
-    // Truy vấn dữ liệu bảng xếp hạng
     $sql = "
         SELECT 
             nddg.ho_ten AS ten_nguoi_duoc_danh_gia, 
@@ -26,10 +25,8 @@ if ($ma_dot) {
     $stmt->bindParam(':ma_dot', $ma_dot);
     $stmt->execute();
     $bang_xep_hang = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
-    if (empty($bang_xep_hang)) {
-        error_log("Không có dữ liệu cho mã đợt: " . $ma_dot);
-    }
+} else {
+    $bang_xep_hang = [];
 }
 ?>
 <!DOCTYPE html>
@@ -38,74 +35,143 @@ if ($ma_dot) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bảng xếp hạng</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Quicksand&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <style>
         body {
-            font-family: 'Quicksand', sans-serif;
+            font-family: 'Inter', sans-serif;
+            background-color: #f5f7fa;
+        }
+        .main {
+            display: flex;
+            min-height: 100vh;
+        }
+        .content {
+            flex: 1;
+            padding: 32px 24px;
+            background: #fff;
+            border-radius: 12px;
+            margin: 32px auto;
+            max-width: 900px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .top-medal {
+            width: 38px;
+            height: 38px;
+            margin-bottom: 6px;
+        }
+        .top-row {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 32px;
+            margin-bottom: 32px;
+        }
+        .top-box {
+            background: #f8fafc;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            padding: 18px 16px;
+            min-width: 120px;
+            text-align: center;
+        }
+        .top-box.top1 {
+            border: 2px solid #facc15;
+            background: #fffbe6;
+            scale: 1.08;
+        }
+        .table thead th {
+            background: #f1f5f9;
         }
     </style>
 </head>
-<body class="bg-white min-h-screen p-6 sm:p-10">
+<body>
+<div class="main">
+    <?php include './sidebar.php'; ?>
 
-    <div class="max-w-4xl mx-auto">
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-3xl font-normal text-black tracking-tight leading-tight">
-                See where you are!
-            </h1>
-        </div>
-        <p class="text-gray-400 text-xs mb-6">
-            Here is your Leaderboard
-        </p>
+    <div class="content">
+        <h2 class="mb-4"><i class="bi bi-trophy-fill text-warning"></i> Bảng xếp hạng</h2>
+
+        <form method="get" class="row g-2 align-items-end mb-4">
+            <div class="col-auto">
+                <label for="ma_dot" class="form-label mb-0">Chọn đợt:</label>
+            </div>
+            <div class="col-auto">
+                <select name="ma_dot" id="ma_dot" class="form-select">
+                    <?php
+                    $dots = $conn->query("SELECT ma_dot, ten_dot FROM dot_danh_gia ORDER BY ma_dot DESC")->fetchAll(PDO::FETCH_ASSOC);
+                    foreach ($dots as $dot):
+                    ?>
+                        <option value="<?= $dot['ma_dot'] ?>" <?= ($ma_dot == $dot['ma_dot']) ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($dot['ten_dot']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> Xem</button>
+            </div>
+        </form>
 
         <!-- Hiển thị Top 1, 2, 3 -->
-        <div class="flex justify-center items-end gap-4 mb-10">
-    <!-- Top 2 -->
-    <?php if (isset($bang_xep_hang[1])): ?>
-        <div class="flex flex-col items-center bg-white shadow-md rounded-xl px-4 py-3 w-28">
-            <img class="w-10 h-10 mb-1" src="https://twemoji.maxcdn.com/v/latest/72x72/1f948.png" alt="Silver Medal">
-            <span class="text-center text-sm font-semibold"><?= htmlspecialchars($bang_xep_hang[1]['ten_nguoi_duoc_danh_gia']) ?></span>
-        </div>
-    <?php endif; ?>
+        <div class="top-row">
+            <?php if (isset($bang_xep_hang[1])): ?>
+                <div class="top-box">
+    <span style="font-size:2.2rem;display:block;">🥈</span>
+                    <div class="fw-semibold"><?= htmlspecialchars($bang_xep_hang[1]['ten_nguoi_duoc_danh_gia']) ?></div>
+                    <div class="text-secondary small">Hạng 2</div>
+                </div>
+            <?php endif; ?>
 
-    <!-- Top 1 -->
-    <?php if (isset($bang_xep_hang[0])): ?>
-        <div class="flex flex-col items-center bg-white shadow-xl border-2 border-yellow-400 rounded-xl px-6 py-4 w-32 scale-110">
-        <img src="https://twemoji.maxcdn.com/v/latest/72x72/1f947.png" alt="Huy chương vàng" width="30">
-        <span class="text-center text-base font-bold"><?= htmlspecialchars($bang_xep_hang[0]['ten_nguoi_duoc_danh_gia']) ?></span>
-        </div>
-    <?php endif; ?>
+            <?php if (isset($bang_xep_hang[0])): ?>
+                <div class="top-box top1">
+    <span style="font-size:2.2rem;display:block;">🥇</span>
+                    <div class="fw-bold"><?= htmlspecialchars($bang_xep_hang[0]['ten_nguoi_duoc_danh_gia']) ?></div>
+                    <div class="text-warning small">Hạng 1</div>
+                </div>
+            <?php endif; ?>
 
-    <!-- Top 3 -->
-    <?php if (isset($bang_xep_hang[2])): ?>
-        <div class="flex flex-col items-center bg-white shadow-md rounded-xl px-4 py-3 w-28">
-            <img class="w-10 h-10 mb-1" src="https://twemoji.maxcdn.com/v/latest/72x72/1f949.png" alt="Bronze Medal">
-            <span class="text-center text-sm font-semibold"><?= htmlspecialchars($bang_xep_hang[2]['ten_nguoi_duoc_danh_gia']) ?></span>
-        </div>
-    <?php endif; ?>
-</div>
-
-
-        <!-- Hiển thị từ Top 4 trở đi -->
-        <div class="grid grid-cols-3 gap-4 text-black font-normal text-base mb-2">
-            <div>Username</div>
-            <div>Rank</div>
-            <div>Score</div>
-        </div>
-        <div class="space-y-2">
-            <?php if (!empty($bang_xep_hang)): ?>
-                <?php for ($i = 3; $i < count($bang_xep_hang); $i++): ?>
-                    <div class="bg-gray-200 rounded-full px-4 py-2 grid grid-cols-3 text-black text-sm font-normal">
-                        <div><?= htmlspecialchars($bang_xep_hang[$i]['ten_nguoi_duoc_danh_gia']) ?></div>
-                        <div class="text-center"><?= $i + 1 ?></div>
-                        <div class="text-right"><?= number_format($bang_xep_hang[$i]['diem_trung_binh_tb'], 2) ?></div>
-                    </div>
-                <?php endfor; ?>
-            <?php else: ?>
-                <p class="text-center text-gray-500">Không có dữ liệu đánh giá cho đợt này.</p>
+            <?php if (isset($bang_xep_hang[2])): ?>
+                <div class="top-box">
+    <span style="font-size:2.2rem;display:block;">🥉</span>
+                    <div class="fw-semibold"><?= htmlspecialchars($bang_xep_hang[2]['ten_nguoi_duoc_danh_gia']) ?></div>
+                    <div class="text-secondary small">Hạng 3</div>
+                </div>
             <?php endif; ?>
         </div>
+
+        <!-- Hiển thị bảng xếp hạng -->
+        <?php if (!empty($bang_xep_hang)): ?>
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle">
+                <thead>
+                    <tr>
+                        <th>Hạng</th>
+                        <th>Người được đánh giá</th>
+                        <th>Điểm Tuân Thủ (TB)</th>
+                        <th>Điểm Hợp Tác (TB)</th>
+                        <th>Điểm Tận Tụy (TB)</th>
+                        <th>Điểm Trung Bình</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($bang_xep_hang as $i => $row): ?>
+                        <tr<?= $i < 3 ? ' class="table-warning"' : '' ?>>
+                            <td><?= $i + 1 ?></td>
+                            <td><?= htmlspecialchars($row['ten_nguoi_duoc_danh_gia']) ?></td>
+                            <td><?= number_format($row['diem_tuan_thu_tb'], 2) ?></td>
+                            <td><?= number_format($row['diem_hop_tac_tb'], 2) ?></td>
+                            <td><?= number_format($row['diem_tan_tuy_tb'], 2) ?></td>
+                            <td class="fw-bold"><?= number_format($row['diem_trung_binh_tb'], 2) ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        <?php else: ?>
+            <div class="alert alert-info mt-4">Không có dữ liệu đánh giá cho đợt này.</div>
+        <?php endif; ?>
     </div>
+</div>
 </body>
 </html>

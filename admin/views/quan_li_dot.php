@@ -55,6 +55,19 @@ $conn->exec($sql);
 // Lấy danh sách đợt đánh giá
 $stmt = $conn->query("SELECT * FROM dot_danh_gia ORDER BY ma_dot DESC");
 $ds_dot = $stmt->fetchAll(PDO::FETCH_ASSOC);
+// PHÂN TRANG
+$limit = 10;
+$page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($page - 1) * $limit;
+
+// Đếm tổng số đợt
+$stmt_count = $conn->query("SELECT COUNT(*) FROM dot_danh_gia");
+$total = $stmt_count->fetchColumn();
+$total_pages = ceil($total / $limit);
+
+// Lấy danh sách đợt đánh giá có phân trang
+$stmt = $conn->query("SELECT * FROM dot_danh_gia ORDER BY ma_dot DESC LIMIT $limit OFFSET $offset");
+$ds_dot = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <!DOCTYPE html>
@@ -136,6 +149,17 @@ $ds_dot = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <?php endforeach; ?>
             </tbody>
         </table>
+         <?php if ($total_pages > 1): ?>
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+                    <li class="page-item <?= ($i == $page) ? 'active' : '' ?>">
+                        <a class="page-link" href="?page=<?= $i ?>"><?= $i ?></a>
+                    </li>
+                <?php endfor; ?>
+            </ul>
+        </nav>
+        <?php endif; ?>
     </div>
 </div>
 

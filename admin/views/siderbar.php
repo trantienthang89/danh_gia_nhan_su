@@ -15,8 +15,8 @@ if (session_status() == PHP_SESSION_NONE) {
                 <p style="font-weight: bold; color: #212529; margin: 0;">
                     <?php
                     // Hiển thị tên đăng nhập từ session
-                    if (isset($_SESSION['user']['ten_dang_nhap'])) {
-                        echo htmlspecialchars($_SESSION['user']['ten_dang_nhap']);
+                    if (isset($_SESSION['user']['ho_ten'])) {
+        echo htmlspecialchars($_SESSION['user']['ho_ten']);
                     } else {
                         echo "Khách";
                     }
@@ -38,48 +38,48 @@ if (session_status() == PHP_SESSION_NONE) {
             <div>
                 <p style="font-weight: bold; margin-bottom: 12px; color: #212529;">Quản lý hệ thống</p>
                 <ul style="margin-left: 0; list-style: none; padding: 0;">
-                    <li style="margin-bottom: 8px;">
-                        <a style="display: flex; align-items: center; gap: 8px; color: #495057; font-size: 0.875rem; text-decoration: none; padding: 8px 12px; border-radius: 5px; transition: background-color 0.3s;" href="./dashboard.php">
-                            <span style="font-size: 1rem;"></span>
-                            <span>Dashboard</span>
-                        </a>
-                    </li>
-                    <li style="margin-bottom: 8px;">
-                        <a style="display: flex; align-items: center; gap: 8px; color: #495057; font-size: 0.875rem; text-decoration: none; padding: 8px 12px; border-radius: 5px; transition: background-color 0.3s;" href="./nhanvien.php">
-                            <span style="font-size: 1rem;"></span>
-                            <span>Quản lý Nhân viên</span>
-                        </a>
-                    </li>
-                    <li style="margin-bottom: 8px;">
-                        <a style="display: flex; align-items: center; gap: 8px; color: #495057; font-size: 0.875rem; text-decoration: none; padding: 8px 12px; border-radius: 5px; transition: background-color 0.3s;" href="./admin_danh_gia.php">
-                            <span style="font-size: 1rem;"></span>
-                            <span>Đánh Giá</span>
-                        </a>
-                    </li>
-                    <li style="margin-bottom: 8px;">
-                        <a style="display: flex; align-items: center; gap: 8px; color: #495057; font-size: 0.875rem; text-decoration: none; padding: 8px 12px; border-radius: 5px; transition: background-color 0.3s;" href="./quan_li_danh_gia.php">
-                            <span style="font-size: 1rem;"></span>
-                            <span>Quản lý Đánh giá</span>
-                        </a>
-                    </li>
-                </ul>
+    <li style="margin-bottom: 8px;">
+        <a style="display: flex; align-items: center; gap: 8px; color: #495057; font-size: 0.875rem; text-decoration: none; padding: 8px 12px; border-radius: 5px; transition: background-color 0.3s;" href="./dashboard.php">
+            <span style="font-size: 1rem;">🏠</span>
+            <span>Dashboard</span>
+        </a>
+    </li>
+    <li style="margin-bottom: 8px;">
+        <a style="display: flex; align-items: center; gap: 8px; color: #495057; font-size: 0.875rem; text-decoration: none; padding: 8px 12px; border-radius: 5px; transition: background-color 0.3s;" href="./nhanvien.php">
+            <span style="font-size: 1rem;">👨‍💼</span>
+            <span>Quản lý Nhân viên</span>
+        </a>
+    </li>
+    <li style="margin-bottom: 8px;">
+        <a style="display: flex; align-items: center; gap: 8px; color: #495057; font-size: 0.875rem; text-decoration: none; padding: 8px 12px; border-radius: 5px; transition: background-color 0.3s;" href="./admin_danh_gia.php">
+            <span style="font-size: 1rem;">📝</span>
+            <span>Đánh Giá</span>
+        </a>
+    </li>
+    <li style="margin-bottom: 8px;">
+        <a style="display: flex; align-items: center; gap: 8px; color: #495057; font-size: 0.875rem; text-decoration: none; padding: 8px 12px; border-radius: 5px; transition: background-color 0.3s;" href="./quan_li_danh_gia.php">
+            <span style="font-size: 1rem;">📋</span>
+            <span>Quản lý Đánh giá</span>
+        </a>
+    </li>
+</ul>
             </div>
             <div>
                 <p style="font-weight: bold; margin-bottom: 12px; color: #212529;">Quản lý mã đợt</p>
-                <ul style="margin-left: 0; list-style: none; padding: 0;">
-                    <li style="margin-bottom: 8px;">
-                        <a style="display: flex; align-items: center; gap: 8px; color: #495057; font-size: 0.875rem; text-decoration: none; padding: 8px 12px; border-radius: 5px; transition: background-color 0.3s;" href="./quan_li_dot.php">
-                            <span style="font-size: 1rem;"></span>
-                            <span>Tạo đợt mới</span>
-                        </a>
-                    </li>
-                    <li style="margin-bottom: 8px;">
-                        <a style="display: flex; align-items: center; gap: 8px; color: #495057; font-size: 0.875rem; text-decoration: none; padding: 8px 12px; border-radius: 5px; transition: background-color 0.3s;" href="./bang_xep_hang.php">
-                            <span style="font-size: 1rem;"></span>
-                            <span>Bảng xếp hạng</span>
-                        </a>
-                    </li>
-                </ul>
+               <ul style="margin-left: 0; list-style: none; padding: 0;">
+    <li style="margin-bottom: 8px;">
+        <a style="display: flex; align-items: center; gap: 8px; color: #495057; font-size: 0.875rem; text-decoration: none; padding: 8px 12px; border-radius: 5px; transition: background-color 0.3s;" href="./quan_li_dot.php">
+            <span style="font-size: 1rem;">🕒</span>
+            <span>Tạo đợt mới</span>
+        </a>
+    </li>
+    <li style="margin-bottom: 8px;">
+        <a style="display: flex; align-items: center; gap: 8px; color: #495057; font-size: 0.875rem; text-decoration: none; padding: 8px 12px; border-radius: 5px; transition: background-color 0.3s;" href="./bang_xep_hang.php">
+            <span style="font-size: 1rem;">🏆</span>
+            <span>Bảng xếp hạng</span>
+        </a>
+    </li>
+</ul>
             </div>
         </nav>
         <!-- Nút Đăng xuất -->

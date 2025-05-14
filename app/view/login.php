@@ -47,7 +47,14 @@
    <h1 class="text-3xl font-semibold leading-tight mb-6 text-black">
     Sign in
    </h1>
-   
+   <?php if (isset($_GET['error'])): ?>
+  <div class="mb-4">
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded relative flex items-center gap-2" role="alert">
+      <i class="fas fa-exclamation-circle"></i>
+      <span><?= htmlspecialchars($_GET['error']) ?></span>
+    </div>
+  </div>
+<?php endif; ?>
    <form method="POST" action="/app/controller/AuthController.php">
    <div class="mb-4">
      <label class="block text-[11px] font-normal text-black mb-1 select-none" for="username">
